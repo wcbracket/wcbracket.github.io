@@ -76,7 +76,7 @@ const GROUPS = [
     teams: [
       { id: 'FRA', name: 'საფრანგეთი', flag: '🇫🇷' },
       { id: 'SEN', name: 'სენეგალი', flag: '🇸🇳' },
-      { id: 'IRQ', name: 'ირაყი', flag: '🇮🇶' },
+      { id: 'IRQ', name: 'ერაყი', flag: '🇮🇶' },
       { id: 'NOR', name: 'ნორვეგია', flag: '🇳🇴' },
     ]
   },
