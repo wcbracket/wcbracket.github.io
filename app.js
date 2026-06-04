@@ -156,7 +156,10 @@ function renderApp() {
       <div class="header-inner">
         <div class="header-brand">🏆 <span>2026 ბრეკეტი</span></div>
         <nav class="nav-tabs">${tabsHtml}</nav>
-        <button class="btn-reset" onclick="resetAll()">↺ თავიდან</button>
+        <div class="header-actions">
+          <button class="btn-share" onclick="shareBracket()">🔗 გაზიარება</button>
+          <button class="btn-reset" onclick="resetAll()">↺ თავიდან</button>
+        </div>
       </div>
     </header>
     <main class="main-content fade-in" id="view-content"></main>
@@ -365,6 +368,10 @@ function renderBracket(container) {
         ${third ? `<div class="podium-item"><div class="podium-pos">🥉 მე-3 ადგილი</div><div class="podium-flag">${third.flag}</div><div class="podium-name">${third.name}</div></div>` : ''}
         ${fourth ? `<div class="podium-item"><div class="podium-pos">4️⃣ მე-4 ადგილი</div><div class="podium-flag">${fourth.flag}</div><div class="podium-name">${fourth.name}</div></div>` : ''}
       </div>
+      <div class="share-cta">
+        <button class="btn-share-big" onclick="shareBracket()">🔗 გააზიარე შენი ბრეკეტი</button>
+        <div class="share-hint">ბმული ინახავს ყველა შენს არჩევანს — გახსნისას ზუსტად ეს ბრეკეტი გამოჩნდება</div>
+      </div>
     `;
   }
 
@@ -459,5 +466,99 @@ function pickWinner(matchId, teamId) {
   renderApp();
 }
 
+// ── Share / persistence via URL ────────────────────────────────
+// All IDs (team ids, match ids, group letters) are ASCII, so btoa is safe.
+function base64UrlEncode(str) {
+  return btoa(unescape(encodeURIComponent(str)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function base64UrlDecode(str) {
+  str = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (str.length % 4) str += '=';
+  return decodeURIComponent(escape(atob(str)));
+}
+
+function encodeState() {
+  const data = { g: {}, t: state.thirdPlaceSelected, b: state.bracket };
+  GROUPS.forEach(g => {
+    const r = state.groupRankings[g.id];
+    if (r && r.length) data.g[g.id] = r;
+  });
+  return base64UrlEncode(JSON.stringify(data));
+}
+
+function decodeState(code) {
+  const data = JSON.parse(base64UrlDecode(code));
+  state.groupRankings = data.g || {};
+  state.thirdPlaceSelected = data.t || [];
+  state.bracket = data.b || {};
+}
+
+function loadFromHash() {
+  const m = location.hash.match(/[#&]b=([^&]+)/);
+  if (!m) return false;
+  try {
+    decodeState(m[1]);
+    state.view = 'bracket';
+    return true;
+  } catch (e) {
+    console.warn('ბრეკეტის ჩატვირთვა ვერ მოხერხდა:', e);
+    return false;
+  }
+}
+
+function buildShareUrl() {
+  const base = location.origin + location.pathname;
+  return base + '#b=' + encodeState();
+}
+
+async function shareBracket() {
+  const url = buildShareUrl();
+  // Reflect current bracket in the address bar too
+  try { history.replaceState(null, '', '#b=' + encodeState()); } catch (e) {}
+
+  const champId = state.bracket['fin_0'];
+  const champ = champId ? getTeam(champId) : null;
+  const shareText = champ
+    ? `ჩემი 2026 მსოფლიო ჩემპიონატის პროგნოზი — ჩემპიონი: ${champ.flag} ${champ.name}!`
+    : 'ნახე ჩემი 2026 მსოფლიო ჩემპიონატის ბრეკეტი!';
+
+  // Native share sheet (mobile / supported browsers)
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: '2026 ბრეკეტი', text: shareText, url });
+      return;
+    } catch (e) { /* user cancelled — fall through to copy */ }
+  }
+
+  // Fallback: copy link to clipboard
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast('🔗 ბმული დაკოპირდა! გაუზიარე მეგობრებს.');
+  } catch (e) {
+    showSharePrompt(url);
+  }
+}
+
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.className = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// Last-resort fallback if clipboard API is blocked
+function showSharePrompt(url) {
+  window.prompt('დააკოპირე ეს ბმული:', url);
+}
+
 // ── Init ───────────────────────────────────────────────────────
+loadFromHash();
 render();

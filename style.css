@@ -252,6 +252,85 @@ body::before {
 }
 .btn-reset:hover { background: rgba(198,40,40,0.3); }
 
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-share {
+  background: rgba(249,168,37,0.15);
+  border: 1px solid rgba(249,168,37,0.4);
+  color: var(--gold);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn-share:hover { background: rgba(249,168,37,0.28); }
+
+/* ── SHARE CTA (in champion card) ── */
+.share-cta {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.btn-share-big {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+  color: #1a1207;
+  border: none;
+  border-radius: 50px;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+  box-shadow: 0 4px 18px rgba(249,168,37,0.35);
+}
+.btn-share-big:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(249,168,37,0.5); }
+
+.share-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 10px;
+}
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%) translateY(20px);
+  background: #1c1c2e;
+  border: 1px solid rgba(249,168,37,0.4);
+  color: var(--text);
+  padding: 14px 22px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 9999;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 600px) {
+  .btn-share span, .btn-reset { font-size: 12px; }
+}
+
 /* ── MAIN CONTENT ── */
 .main-content {
   max-width: 1200px;
