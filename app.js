@@ -540,20 +540,10 @@ async function shareBracket() {
   // Reflect the current bracket in the address bar
   try { history.replaceState(null, '', '?b=' + encodeState()); } catch (e) {}
 
-  // Always copy the link automatically first
+  // Copy the link to the clipboard (no native share sheet)
   const copied = await copyToClipboard(url);
-  if (copied) showToast('🔗 ბმული დაკოპირდა! ახლა შეგიძლია გააზიარო.');
+  if (copied) showToast('🔗 ბმული დაკოპირდა! გაუზიარე მეგობრებს.');
   else showSharePrompt(url);
-
-  // On mobile / supported browsers, also offer the native share sheet
-  const champId = state.bracket['fin_0'];
-  const champ = champId ? getTeam(champId) : null;
-  const shareText = champ
-    ? `ჩემი 2026 მსოფლიო ჩემპიონატის პროგნოზი — ჩემპიონი: ${champ.flag} ${champ.name}!`
-    : 'ნახე ჩემი 2026 მსოფლიო ჩემპიონატის ბრეკეტი!';
-  if (navigator.share) {
-    try { await navigator.share({ title: '2026 ბრეკეტი', text: shareText, url }); } catch (e) {}
-  }
 }
 
 function showToast(msg) {
