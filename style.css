@@ -710,11 +710,43 @@ body::before {
 }
 
 /* ── RESPONSIVE ── */
-@media (max-width: 600px) {
-  .nav-tabs { gap: 2px; }
-  .nav-tab { padding: 6px 10px; font-size: 12px; }
-  .groups-grid { grid-template-columns: 1fr 1fr; }
+@media (max-width: 760px) {
+  /* Header: brand + actions on top row, tabs scroll below */
+  .app-header { padding: 0 12px; }
+  .header-inner {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px 0;
+    gap: 8px;
+  }
+  .header-brand { order: 1; font-size: 16px; }
+  .header-actions { order: 2; margin-left: auto; }
+  .nav-tabs {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    gap: 4px;
+    padding-bottom: 2px;
+  }
+  .nav-tabs::-webkit-scrollbar { height: 0; }
+  .nav-tab { flex: 1 0 auto; padding: 8px 12px; font-size: 13px; }
+
+  .btn-share { padding: 7px 12px; font-size: 12px; }
+  .btn-reset { padding: 7px 10px; font-size: 12px; }
+
+  .main-content { padding: 20px 14px 60px; }
+  .section-title { font-size: 22px; }
+  .section-subtitle { font-size: 14px; }
+
+  /* One column so team names never get clipped */
+  .groups-grid { grid-template-columns: 1fr; }
   .third-grid { grid-template-columns: 1fr; }
+
+  .team-name { white-space: normal; }
+}
+
+@media (max-width: 420px) {
   .header-brand span { display: none; }
 }
 
