@@ -494,11 +494,14 @@ function decodeState(code) {
   state.bracket = data.b || {};
 }
 
-function loadFromHash() {
-  const m = location.hash.match(/[#&]b=([^&]+)/);
-  if (!m) return false;
+function loadFromUrl() {
+  // Prefer query string (?b=...) — survives sharing; fall back to legacy hash (#b=...)
+  const fromQuery = location.search.match(/[?&]b=([^&]+)/);
+  const fromHash = location.hash.match(/[#&]b=([^&]+)/);
+  const code = fromQuery ? fromQuery[1] : (fromHash ? fromHash[1] : null);
+  if (!code) return false;
   try {
-    decodeState(m[1]);
+    decodeState(decodeURIComponent(code));
     state.view = 'bracket';
     return true;
   } catch (e) {
@@ -508,35 +511,48 @@ function loadFromHash() {
 }
 
 function buildShareUrl() {
-  const base = location.origin + location.pathname;
-  return base + '#b=' + encodeState();
+  // Use a query param so the payload is preserved when shared through
+  // messaging apps (which often strip the #fragment).
+  return location.origin + location.pathname + '?b=' + encodeState();
+}
+
+async function copyToClipboard(text) {
+  // Modern API (needs HTTPS / localhost)
+  if (navigator.clipboard && window.isSecureContext) {
+    try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+  }
+  // Legacy fallback
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) { return false; }
 }
 
 async function shareBracket() {
   const url = buildShareUrl();
-  // Reflect current bracket in the address bar too
-  try { history.replaceState(null, '', '#b=' + encodeState()); } catch (e) {}
+  // Reflect the current bracket in the address bar
+  try { history.replaceState(null, '', '?b=' + encodeState()); } catch (e) {}
 
+  // Always copy the link automatically first
+  const copied = await copyToClipboard(url);
+  if (copied) showToast('🔗 ბმული დაკოპირდა! ახლა შეგიძლია გააზიარო.');
+  else showSharePrompt(url);
+
+  // On mobile / supported browsers, also offer the native share sheet
   const champId = state.bracket['fin_0'];
   const champ = champId ? getTeam(champId) : null;
   const shareText = champ
     ? `ჩემი 2026 მსოფლიო ჩემპიონატის პროგნოზი — ჩემპიონი: ${champ.flag} ${champ.name}!`
     : 'ნახე ჩემი 2026 მსოფლიო ჩემპიონატის ბრეკეტი!';
-
-  // Native share sheet (mobile / supported browsers)
   if (navigator.share) {
-    try {
-      await navigator.share({ title: '2026 ბრეკეტი', text: shareText, url });
-      return;
-    } catch (e) { /* user cancelled — fall through to copy */ }
-  }
-
-  // Fallback: copy link to clipboard
-  try {
-    await navigator.clipboard.writeText(url);
-    showToast('🔗 ბმული დაკოპირდა! გაუზიარე მეგობრებს.');
-  } catch (e) {
-    showSharePrompt(url);
+    try { await navigator.share({ title: '2026 ბრეკეტი', text: shareText, url }); } catch (e) {}
   }
 }
 
@@ -560,5 +576,5 @@ function showSharePrompt(url) {
 }
 
 // ── Init ───────────────────────────────────────────────────────
-loadFromHash();
+loadFromUrl();
 render();
